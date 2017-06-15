@@ -112,44 +112,68 @@ def similarity_score(average_distortion):
 
 def cluster(n_node, E):
     sum_weight=sum([e[2] for e in E ])
-    newman_id = np.array(np.int32, [i for range(n_node)])
-    newman_e = np.array((n_node, n_node))
+    newman_id = np.arange(n_node)
+    newman_e = np.zeros((n_node, n_node))
     newman_a = np.zeros((n_node,))
     for e in E:
         newman_e[e[0]][e[1]] = e[2] / sum_weight
         newman_e[e[1]][e[0]] = e[2] / sum_weight
         newman_a[e[0]] = newman_a[e[0]]+newman_e[e[0]][e[1]]
-        newman_a[e[1]] = newman_a[e[1]]+newman_e[e[0]][e[1]]
-    modularity_Q=0
-    for i in range(n_node):
+        if e[0]!=e[1]:
+            newman_a[e[1]] = newman_a[e[1]]+newman_e[e[0]][e[1]]
+    Q=0
+    for i in range(0,n_node):
         Q = Q + newman_e[i][i] - newman_a[i]*newman_a[i]
+    Q_peek=Q;
+    Q_bottom=Q;
     for i in range(n_node):
-        maxdelta=0
+        maxdelta=-1;
         u=-1
         v=-1
         for e in E:
-            if (newman_id[e[0]]=newman_id[e[1]]):
+            if (newman_id[e[0]]==newman_id[e[1]]):
                 continue
             elif 2*newman_e[newman_id[e[0]]][newman_id[e[1]]]-2*newman_a[newman_id[e[0]]]*newman_a[newman_id[e[1]]]>maxdelta:
                 maxdelta=2*newman_e[newman_id[e[0]]][newman_id[e[1]]]-2*newman_a[newman_id[e[0]]]*newman_a[newman_id[e[1]]]
                 u=newman_id[e[0]]
                 v=newman_id[e[1]]
-        if Q+maxdelta<bound:
+        if maxdelta>0:
+            Q_peek=Q+maxdelta
+        elif (Q+maxdelta-Q_bottom)<(Q_peek-Q_bottom)*0.8:
             break
+        Q=Q+maxdelta
         for j in range(0,n_node):
-            if newman_id[i]=v:
-                newman_id[i]=u
-            elif newman_id[i]=i:
-                newman_e[u][i] = newman_e[u][i] + newman_e[v][i]
-                newman_e[i][u] = newman_e[u][i]
+            if newman_id[j]==v:
+                newman_id[j]=u
+            elif newman_id[j]==j:
+                newman_e[u][j] = newman_e[u][j] + newman_e[v][j]
+                newman_e[j][u] = newman_e[u][j]
         newman_a[u] = newman_a[u] + newman_a[v]
     return newman_id
 
-        
+def test_cluster():
+    E1=np.array([
+                [0, 0, 1], [2, 2, 1], [4, 4, 1],
+                [1, 1, 1], [3, 3, 1], [5, 5, 1],
+                [6, 6, 1], [7, 7, 1], [8, 8, 1],
+                [0, 1, 1], [0, 2, 1], [0, 3, 1],
+                [1, 2, 1], [1, 3, 1], [2, 3, 1],
+                [4, 5, 1], [4, 6, 1], [4, 7, 1],
+                [5, 6, 1], [5, 7, 1], [6, 7, 1]])
+    E2=np.array([
+        [0,1,1],[1,2,1],[2,3,1],[3,4,1],[4,5,1],[5,6,1],[6,0,1],
+        [0,3,1],[3,6,1],[6,2,1],[2,5,1],[5,1,1],[1,4,1],[4,0,1],
+        [7,8,1],[8,9,1],[9,10,1],[7,10,1],[7,9,1],[8,9,1],
+        [3,8,1],[4,11,1],[0,9,1]
+    ])
+    clusters = cluster(12,E2)
+    print(clusters)
+
 
 if __name__ == '__main__':
     V, E = build_graph(*build_matrix(load_feature()))
 
     # examples of how cluster() will be called.
     clusters = cluster(V, E)
+    #test_cluster()
 
