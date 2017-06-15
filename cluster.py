@@ -107,8 +107,50 @@ def similarity_score(average_distortion):
 #     func(e)
 # you may also convert E to another data-structure first 
 # if you need to
+<<<<<<< HEAD
+def cluster(n_node, E):
+    sum_weight=sum([e.weight for e in E ])
+    for i in range(0,n_node)
+      newman_id[i]=i
+      a[i]=0
+    for e in E
+      newman_e[e.x][e.y]=e.weight/sum_weight
+      newman_e[e.y][e.x]=e.weight/sum_weight
+      newman_a[e.x]=newman_a[e.x]+neman_e[e.x][e.y]
+      newman_a[e.y]=newman_a[e.y]+neman_e[e.x][e.y]
+    modularity_Q=0
+    for i in range(0,n_node)
+        Q=Q+newman[i][i]-newman_a[i]*newman_a[i];
+    for i in range(0,n_node)
+        maxdelta=0
+        u=-1
+        v=-1
+        for e in E
+            if (newman_id[e.x]=newman_id[e.y]):
+                continue
+            elif 2*newman_e[newman_id[e.x]][newman_id[e.y]]-2*newman_a[newman_id[e.x]]*newman_a[newman_id[e.y]]>madelta:
+                delta=2*newman_e[newman_id[e.x]][newman_id[e.y]]-2*newman_a[newman_id[e.x]]*newman_a[newman_id[e.y]]
+                u=newman_id[e.x]
+                v=newman_id[e.y]
+#        if Q+maxdelta<bound  stopfor
+        for j in range(0,n_node)
+            if newman_id[i]=v:
+                newman_id[i]=u
+            elif newman_id[i]=i:
+                newman_e[u][i]=newman_e[u][i]+newman_e[v][i]
+                newman_e[i][u]=newman_e[u][i]
+        newman_a[u]=newman_a[u]+newman_a[v];
+                
+
+        
+        
+            
+            
+        
+=======
 def cluster(n_nodes, E):
     pass
+>>>>>>> refs/remotes/Crispher/master
 
 if __name__ == '__main__':
     V, E = build_graph(*build_matrix(load_feature()))
