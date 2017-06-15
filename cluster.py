@@ -36,8 +36,8 @@ def build_matrix(segments):
     similarity_coo = sp.coo_matrix((data, (row, col)), shape=(total_length, total_length))
     sim = similarity_coo.toarray()
     sim += np.transpose(sim)
-    plt.matshow(sim[0:500, 0:500])
-    plt.show()
+    # plt.matshow(sim[0:1000, 0:1000])
+    # plt.show()
     print('I: matrix built')
     return similarity_coo, accumulate_lengths
 
@@ -48,7 +48,7 @@ def build_graph(similarity_coo, accumulate_lengths):
     sum_over_P = np.sum(similarity_coo.toarray() + np.transpose(similarity_coo.toarray()), axis=1)
 
     print(sum_over_P.shape)
-    plt.plot(sum_over_P)
+    # plt.plot(sum_over_P)
     # plt.show()
 
     # divide again
@@ -58,7 +58,7 @@ def build_graph(similarity_coo, accumulate_lengths):
 
     # instead of triangular averaing, we use gaussian for simplicity
     smoothed_similarity = [
-        scipy.ndimage.filters.gaussian_filter(score, sigma=10, mode='nearest') 
+        scipy.ndimage.filters.gaussian_filter(score, sigma=WINDOW_WIDTH/3, mode='nearest') 
         for score in scores
     ]
 
@@ -67,14 +67,14 @@ def build_graph(similarity_coo, accumulate_lengths):
         for sim in smoothed_similarity
     ]
 
-    plt.plot(np.array(reduce(lambda l1, l2 : np.concatenate([l1, l2]), smoothed_similarity)))
-    plt.show()
+    # plt.plot(np.array(reduce(lambda l1, l2 : np.concatenate([l1, l2]), smoothed_similarity)))
+    # plt.show()
 
     nodes_global_index = reduce(
         lambda l1, l2 : l1 + l2, 
-        map(lambda i, jl : [convert_to_global_index(i, j, segments_acc) for j in jl],
-            enumerate(local_extremas) 
-        )
+        [ [convert_to_global_index(i, j, accumulate_lengths) for j in jl]
+            for i, jl in enumerate(local_extremas)
+        ] 
     )
 
     n_nodes = reduce(lambda x, y: x+y, map(len, local_extremas))
@@ -107,8 +107,45 @@ def similarity_score(average_distortion):
 #     func(e)
 # you may also convert E to another data-structure first 
 # if you need to
-def cluster(n_nodes, E):
-    pass
+# def cluster(n_nodes, E):
+#     pass
+
+def cluster(n_node, E):
+    sum_weight=sum([e[2] for e in E ])
+    newman_id = np.array(np.int32, [i for range(n_node)])
+    newman_e = np.array((n_node, n_node))
+    newman_a = np.zeros((n_node,))
+    for e in E:
+        newman_e[e[0]][e[1]] = e[2] / sum_weight
+        newman_e[e[1]][e[0]] = e[2] / sum_weight
+        newman_a[e[0]] = newman_a[e[0]]+newman_e[e[0]][e[1]]
+        newman_a[e[1]] = newman_a[e[1]]+newman_e[e[0]][e[1]]
+    modularity_Q=0
+    for i in range(n_node):
+        Q = Q + newman_e[i][i] - newman_a[i]*newman_a[i]
+    for i in range(n_node):
+        maxdelta=0
+        u=-1
+        v=-1
+        for e in E:
+            if (newman_id[e[0]]=newman_id[e[1]]):
+                continue
+            elif 2*newman_e[newman_id[e[0]]][newman_id[e[1]]]-2*newman_a[newman_id[e[0]]]*newman_a[newman_id[e[1]]]>maxdelta:
+                maxdelta=2*newman_e[newman_id[e[0]]][newman_id[e[1]]]-2*newman_a[newman_id[e[0]]]*newman_a[newman_id[e[1]]]
+                u=newman_id[e[0]]
+                v=newman_id[e[1]]
+        if Q+maxdelta<bound:
+            break
+        for j in range(0,n_node):
+            if newman_id[i]=v:
+                newman_id[i]=u
+            elif newman_id[i]=i:
+                newman_e[u][i] = newman_e[u][i] + newman_e[v][i]
+                newman_e[i][u] = newman_e[u][i]
+        newman_a[u] = newman_a[u] + newman_a[v]
+    return newman_id
+
+        
 
 if __name__ == '__main__':
     V, E = build_graph(*build_matrix(load_feature()))
