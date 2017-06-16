@@ -1,6 +1,6 @@
 # WAV_FILE_PATH = 'data/audio.wav'
 # WAV_FILE_PATH = 'data/short.wav'
-WAV_FILE_PATH = 'data/pi_2.wav'
+WAV_FILE_PATH = 'data/pi.wav'
 # SEGMENTED_PATH = 'data/segmented/'
 SEGMENTED_PATH = 'data/PI_segmented/'
 # MFCC_PATH = 'data/mfcc_feature/'

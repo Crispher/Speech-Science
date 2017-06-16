@@ -49,8 +49,8 @@ def build_matrix(segments):
 def build_edge_weights(N, path_intervals):
     w = np.zeros((N, N))
     for p in path_intervals:
-        # w[p[0]:p[1], p[2]:p[3]]  = np.maximum(similarity_score(p[4]), w[p[0]:p[1], p[2]:p[3]])
-        w[p[0]:p[1], p[2]:p[3]]  += similarity_score(p[4])
+        w[p[0]:p[1], p[2]:p[3]]  = np.maximum(similarity_score(p[4]), w[p[0]:p[1], p[2]:p[3]])
+        # w[p[0]:p[1], p[2]:p[3]]  += similarity_score(p[4])
     # print(sum(w))
     w += np.transpose(w)
     mm=2000
@@ -212,8 +212,8 @@ def cluster(n_node, E, filenames=None):
     Q_peak = Q
     n_clusters = n_node
     for _ in range(n_node):
-        if filenames != None and _ % 5 == 0:
-            copy_by_group(id, filenames, str(_))
+        if filenames != None and (_ % 5 == 0 or n_clusters < 16):
+            copy_by_group(id, filenames, str(n_clusters))
         max_delta = -INFINITY
         max_e = None
         del_e = []
@@ -237,8 +237,8 @@ def cluster(n_node, E, filenames=None):
         Q_peak = max(Q, Q_peak)
         if Q < 0.9 * Q_peak and Q > 0:
             break
-        if n_clusters < 20:
-            break
+        # if n_clusters < 20:
+        #     break
         n_clusters -= 1
         merged_id = min(id[u], id[v])
         unused_id = max(id[u], id[v])
@@ -261,6 +261,6 @@ def cluster(n_node, E, filenames=None):
 if __name__ == '__main__':
     # _ = build_matrix(load_feature())
     _ = build_graph(*pkl_load('build_graph_args'))
-    # id, n_clusters = cluster(*_)
+    id, n_clusters = cluster(*_)
     # print(id)
 

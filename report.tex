@@ -66,6 +66,31 @@
 
     \subsection{Finding Clusters}
     % Kefan, Please finish this part as soon as possible. write roughly 2/3 page.
+        We try to find clusters in the graph remain. A good clustering means nodes in
+        a group are more densely connected to each other than they are to the nodes
+        outside. Here we use a modularity measure Q and a greedy algorithm to find a
+        good clustering (not optimal)
+        \[ Q = \sum_i (e_{ii} - a_i^2) \]
+        where $e_{ij}$ is the fraction of edges in the origin network that connect
+        goup i and group j. $a_i = \sum_j e_{ij}$. So Q is the fraction of edges that
+        fall within groups minus the expected value when it is random distributed. It
+        cost much to find the optimal value of Q. So we use a greedy algorithm.
+
+        At first, each node makes a single group. Each time we combine two groups $x,
+        y$ that:
+        \[ (x, y) = \arg \max Q (G - x - y + x \wedge y) \]
+        \[ \Delta Q = e_{x \wedge y} - a_{x \wedge y}^2 - (e_{xx} - a_x^2) - (e_{yy} -
+        a_y^2) = 2 (e_{xy} - a_x a_y) \]
+        So
+        \[ (x, y) = \arg \max (e_{xy} - a_x a_y) \]
+        So each time we find such two groups and combine them. Refresh the data and
+        judge stop or not.
+
+        Notice that the sign of $\max (e_{xy} - a_x a_y)$ will change at most one time
+        during the algorithm. So $Q (k)$ has only one peek. We prefer mistakenly
+        leaving two like groups unmerged than joining two unlike groups. So we choose
+        the stop point at 80\% of peak modularity.
+
 
 \section{Testing}
     [1] tested the algorithm on several hour-long lecture records, and discovered some of the recurring
@@ -101,20 +126,41 @@
 
     The final result of clustering is shown in the table below:
 
-    Table
+    \begin{tabular}{ccc}
+    \hline
+        Group ID &     occurrences   & transcription\\
+    \hline
+        0   &      11 &3\\
+        1   &       4&1\\
+        2   &       2&1, 14\\
+        4   &       20&6 or 9\\
+        5   &       9&2\\
+        8   &       15&8\\
+        9   &       9&7\\
+        14  &       7&4\\
+        25  &       1&5\\
+        26  &       1&50\\
+        42  &       1&0\\
+        47  &       1&5\\
+        54  &       1&06\\
+        56  &       1&6\\
+        57  &       1&02\\
+    \hline
+    \end{tabular}
 
     We noticed that modularity $Q$ does not decline until termination, which may be due to relatively small size
     of our graph. This causes the termination criterion 80\% peak value to be inapplicable. We therefore set 
-    the number of desired clusters explicitly as XX. 
+    the number of clusters explicitly as 15, which is slightly more than desired to tolerance strange nodes. 
     
     We observe that most digits are grouped correctly, except 
     for the case of 6 and 9 (liu4 and jiu3). They are joined together at a rather early stage of clustering, 
     it seems that 6 and 9 are more similar to each other than one instance of 3 (san3) and another 3. We can 
-    give the explanation that 6 and 9 share the same vowel that lasts relatively longer. Besides, bla bla bla
+    give the explanation that 6 and 9 share the same vowel that lasts relatively longer. Besides, although 5 is 
+    not wrongly categorized, the node extraction stage produce very few number of utterance of 5.
 
 \section{Conclusion}
     We implemented the algorithm proposed in [1]. While recognizing it power, we also note several 
-    shortcomings of it. First, the parameters are task-specific, which adds cost to migrate the algorithm 
+    shortcomings of it. First, the parameters are task-specific, which adds cost to migrating the algorithm 
     between datasets. Second, the setting of $L$ limits the possible length of a phonetic unit to 
     a narrow range. In the current setting, patterns lasting 0.5s and 4s are not likely to be found simultaneously.
     (More strictly, this is possible, but needs to rely on subsequent clustering stage.) A more flexible 
