@@ -16,8 +16,6 @@ def build_matrix(segments):
     segment_lengths = list(map(lambda s: s.shape[1], segments))
     accumulate_lengths = [0] + list(accumulate(segment_lengths))
     total_length = accumulate_lengths[-1]
-
-    # print(total_length, accumulate_lengths)
     
     # sparse matrix representation of the graph
     sim = np.zeros((total_length, total_length))
@@ -40,9 +38,6 @@ def build_matrix(segments):
                     gj0, gj1 = (convert_to_global_index(j, g, accumulate_lengths) for g in [j0, j1])
                     assert gi0 < gi1 < gj0 < gj1
                     path_intervals.add((gi0, gi1, gj0, gj1, average_distortion))
-
-    # similarity_coo = sp.coo_matrix((data, (row, col)), shape=(total_length, total_length))
-    # sim = similarity_coo.toarray()
     sim += np.transpose(sim)
     mm=1000
     plt.matshow(sim[accumulate_lengths[5]:accumulate_lengths[10], accumulate_lengths[5]:accumulate_lengths[10]])
@@ -70,7 +65,6 @@ def compute_node_interval(nodes, path_intervals, acc):
     print(nodes) 
     for i, n in enumerate(nodes):
         for p in path_intervals:
-            # print(p)
             if p[0] <= n <= p[1]:
                 intervals[i] += [(p[0], p[1])]
             elif p[2] <= n <= p[3]:
@@ -92,7 +86,6 @@ def compute_node_interval(nodes, path_intervals, acc):
     print(len(nodes), len(integer_limits), len(acc))
     filenames = []
     for i, limits in enumerate(integer_limits):
-        # local_integer_limits[i] = (limits[0] - acc[i], limits[1] - acc[i])
         l, r = convert_to_local_index(limits[0], acc), convert_to_local_index(limits[1], acc)
         assert l[0] == r[0]
         local_integer_limits[i] = (l[1], r[1])
@@ -123,12 +116,8 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
     # urrr, there is a subtle difference here.
     sum_over_P = np.sum(similarity, axis=1)
 
-    # plt.show()
-    # exit(0)
     print(sum_over_P.shape)
     plt.plot(sum_over_P)
-    # plt.show()
-    # exit(0)
     # divide again
     scores = [
         sum_over_P[i:j] for i,j in zip(accumulate_lengths[:-1], accumulate_lengths[1:]) 
@@ -145,9 +134,7 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
         for sim in smoothed_similarity
     ]
 
-
     plt.plot(np.array(reduce(lambda l1, l2 : np.concatenate([l1, l2]), smoothed_similarity)))
-    # plt.show()
 
     nodes_global_index = reduce(
         lambda l1, l2 : l1 + l2, 
@@ -157,11 +144,8 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
     )
 
     filenames = compute_node_interval(nodes_global_index, path_intervals, accumulate_lengths)
-    # exit(0)
-    # local_time_align(local_extrema)
 
     n_nodes = reduce(lambda x, y: x+y, map(len, local_extrema))
-    assert n_nodes == len(nodes_global_index)
     edge_set = set()
     
     for i in range(n_nodes):
@@ -172,8 +156,6 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
     pkl_dump('cluster_args', (n_nodes, edge_set, filenames))
     print('I: graph build #node: %d, #edge:%d, vars dumped' % (n_nodes, len(edge_set)))
     return n_nodes, edge_set, filenames
-
-    # build edges
 
 # get a global index for j-th feature of fragment i
 def convert_to_global_index(i, j, segments_acc):
@@ -211,19 +193,8 @@ def similarity_score(average_distortion):
 # v1 and v2 are integers in range(0, n_nodes) 
 # should return a set of connect-component as described
 # in sect IV. B.
-
-# the use of set: 
-# you can access all the elements in an unordered set by:
-# for e in E:
-#     func(e)
-# you may also convert E to another data-structure first 
-# if you need to
-# def cluster(n_nodes, E):
-#     pass
   
 def cluster(n_node, E, filenames=None):
-    remove_isolated_node(n_node, E)
-    # exit(0)
     id = np.array([i for i in range(n_node)])
     # assuming e normalized
     N_e = np.zeros((n_node, n_node))
@@ -233,8 +204,6 @@ def cluster(n_node, E, filenames=None):
         N_e[e[1], e[0]] = 0.5 * e[2]
     N_e = N_e / np.sum(N_e)
     N_a = np.sum(N_e, axis=1)
-    # print(N_a)
-    # print(N_e)
     # initial computing of Q
     Q = np.sum([
         N_e[i,i] - N_a[i]**2 for i in range(n_node)
@@ -244,9 +213,6 @@ def cluster(n_node, E, filenames=None):
     for _ in range(n_node):
         if filenames != None and _ % 5 == 0:
             copy_by_group(id, filenames, str(_))
-#         print('=====================')
-        # print(E, Q)
-        # print(id)
         max_delta = -INFINITY
         max_e = None
         del_e = []
@@ -259,12 +225,10 @@ def cluster(n_node, E, filenames=None):
                     max_e = e
             else:
                 del_e += [e]
-        # print('removed', max_e)
         if max_e == None:
             print('edge exhausted')
             break
         E.remove(max_e)
-        # print('E after', E)
         for e in del_e:
             E.remove(e)
         u, v, w = max_e
@@ -274,12 +238,10 @@ def cluster(n_node, E, filenames=None):
             break
         if n_clusters < 20:
             break
-        # update matrix
         n_clusters -= 1
         merged_id = min(id[u], id[v])
         unused_id = max(id[u], id[v])
         N_a[merged_id] = N_a[id[u]] + N_a[id[v]]
-        # print(merged_id, unused_id)
         for j in range(n_node):
             if id[j] == unused_id:
                 id[j] = merged_id
@@ -292,51 +254,12 @@ def cluster(n_node, E, filenames=None):
                 N_e[j,:] = 0
                 N_e[:,j] = 0
                 N_a[j] = 0
-#         print('id after', id)
-#         print(N_e, N_a)
-#         print('+++++++++++++++++++++++')
         print("Q: ", Q, '#clusters: ', n_clusters)
     return id, n_clusters
-
-def _debug_cluster():
-    E = {(0,1,1), (0,2,2), (1,2,3), (2,3,0.1), (3,4,4)}
-    cluster_(5, E)
-
-import networkx as nx
-def visualize_graph(n_node, E):
-    G = nx.Graph()
-    G.add_node(range(n_node))
-    for e in E:
-        G.add_edge(e[0], e[1])
-    limits=plt.axis('off')
-    nx.draw_networkx(G)
-    plt.draw()
-    plt.show()
-
-def remove_isolated_node(V, E):
-    connected = [False for i in range(V)]
-    for e in E:
-        connected[e[0]] = connected[e[1]] = True
-    isolated = []
-    for i in range(V):
-        if not connected[i]:
-            isolated += [i]
-    print('isolated: ', isolated)
-    return isolated
-
 
 if __name__ == '__main__':
     # _ = build_matrix(load_feature())
     _ = build_graph(*pkl_load('build_graph_args'))
     id, n_clusters = cluster(*_)
     print(id)
-    # V, E = build_graph(pkl_load('similarity_coo'), pkl_load('accumulate_lengths'), pkl_load('path_intervals'))
-    # _local_align()
-    # examples of how cluster() will be called.
-    # visualize_graph(*pkl_load('cluster_args'))
-    # id, n_clusters = cluster(*pkl_load('cluster_args'))
-    # id, n_cluster = cluster(V, E)
-    # print(id)
-
-    # _debug_cluster()
 
