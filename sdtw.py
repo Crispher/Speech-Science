@@ -7,7 +7,7 @@ import os
 
 
 def extract_feature(wav_segment, sr):
-    mfccs = rosa.feature.mfcc(y=wav_segment, sr=sr, n_mfcc=30)
+    mfccs = rosa.feature.mfcc(y=wav_segment, sr=sr, n_mfcc=N_MFCC, hop_length=450)
     # print(mfcc.shape)
     # mfccs: (N, T)
     mfcc_means = np.mean(mfccs, axis=1)
@@ -54,6 +54,7 @@ def compare_signal(x, y):
             paths[key] = (paths[key][refined_path_start:refined_path_end], average_distortion)
         else:
             pop_keys += [key]
+    print('paths retained: ', 1 - len(pop_keys) / len(paths))
     for key in pop_keys:
         paths.pop(key)
 
@@ -179,15 +180,18 @@ def LCMA(S, L):
             if mean < current_minimum:
                 current_minimum = mean
                 minimum_pair = (cursor, cursor+l)
+
+    if current_minimum > DISTORTION_THRESHOLD:
+        return None
     return minimum_pair, current_minimum
 
 def _compare_test():
-    wav1, sr1 = rosa.core.load(SEGMENTED_PATH+'32.wav')
-    wav2, sr2 = rosa.core.load(SEGMENTED_PATH+'33.wav')
+    wav1, sr1 = rosa.core.load(SEGMENTED_PATH+'5.wav')
+    wav2, sr2 = rosa.core.load(SEGMENTED_PATH+'7.wav')
     mfcc1, mfcc2 = extract_feature(wav1, sr1), extract_feature(wav2, sr2)
-    plt.matshow(mfcc1)
-    plt.matshow(mfcc2)
-    plt.show()
+    # plt.matshow(mfcc1)
+    # plt.matshow(mfcc2)
+    # plt.show()
     compare_signal(mfcc1, mfcc2)
 
 def _visualize_paths(cost_table, paths, refined=False):
@@ -195,17 +199,19 @@ def _visualize_paths(cost_table, paths, refined=False):
     print(cost_table_copy.shape)
     for path in paths.values():
         if refined:
+            print(path[1])
             path = path[0]
         for coord in path:
-            print(coord)
+            print('\t', coord)
             cost_table_copy[coord[0], coord[1]] = 0
     plt.matshow(cost_table_copy)
     plt.show()
 
 if __name__ == '__main__':
-    # _compare_test()
-    dump_feature()
-    s = load_feature()
-    for _ in s:
-        print(_.shape)
+    # dump_feature()
+    _compare_test()
+    # dump_feature()
+    # s = load_feature()
+    # for _ in s:
+    #     print(_.shape)
     
