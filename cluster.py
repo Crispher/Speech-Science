@@ -54,8 +54,8 @@ def build_edge_weights(N, path_intervals):
     # print(sum(w))
     w += np.transpose(w)
     mm=2000
-    # plt.matshow(w[:mm,:mm])
-    # plt.show()
+    plt.matshow(w[:mm,:mm])
+    plt.show()
     return w
 
 # compute the average start and end, IV. C in the paper
@@ -118,7 +118,7 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
 
     print(sum_over_P.shape)
     plt.plot(sum_over_P)
-    plt.show()
+    # plt.show()
     # divide again
     scores = [
         sum_over_P[i:j] for i,j in zip(accumulate_lengths[:-1], accumulate_lengths[1:]) 
@@ -145,6 +145,9 @@ def build_graph(similarity, accumulate_lengths, path_intervals):
     )
 
     filenames = compute_node_interval(nodes_global_index, path_intervals, accumulate_lengths)
+    
+    plt.plot(np.array(reduce(lambda l1, l2 : np.concatenate([l1, l2]), smoothed_similarity)))
+    plt.show()
 
     n_nodes = reduce(lambda x, y: x+y, map(len, local_extrema))
     edge_set = set()
@@ -261,6 +264,6 @@ def cluster(n_node, E, filenames=None):
 if __name__ == '__main__':
     # _ = build_matrix(load_feature())
     _ = build_graph(*pkl_load('build_graph_args'))
-    id, n_clusters = cluster(*_)
+    # id, n_clusters = cluster(*_)
     # print(id)
 

@@ -2,7 +2,10 @@
 \title{Report on Implementation of Unsupervised Pattern Discovery in Speech}
 \author{Gu Yu, Lyu Kefan}
 
+\usepackage{graphicx}
+\usepackage{placeins}
 \begin{document}
+
 
 \maketitle
 
@@ -14,6 +17,8 @@
 
     We programmed the algorithms in Python 3, with the assistance of external libraries, NumPy 
     (for array computation) and librosa (for signal manipulation).
+
+    Our implementation is available on GitHub [3], which also includes some test data and results.
 
 \section{Components}
     \subsection{Preparing Data}
@@ -122,10 +127,16 @@
     the performance on a few particular pairs. Figure below indicates the performance on a particular pair
     before and after tuning.
 
-    Figure
-
+    \begin{figure}
+    \includegraphics[width=0.5\textwidth]{data/Figure_1.png}
+    \includegraphics[width=0.5\textwidth]{data/Figure_2.png}
+    \caption{Before and after properly setting the distortion threshold. Red boxes for correct matches and 
+    Dark blue pixels for matching paths.}    
+    \end{figure}
+\FloatBarrier
     The final result of clustering is shown in the table below:
-
+    \begin{table}[h]
+    \centering
     \begin{tabular}{ccc}
     \hline
         Group ID &     occurrences   & transcription\\
@@ -147,6 +158,8 @@
         57  &       1&02\\
     \hline
     \end{tabular}
+    \caption{Cluster found in $\pi$-digits}
+    \end{table}
 
     We noticed that modularity $Q$ does not decline until termination, which may be due to relatively small size
     of our graph. This causes the termination criterion 80\% peak value to be inapplicable. We therefore set 
@@ -154,17 +167,29 @@
     
     We observe that most digits are grouped correctly, except 
     for the case of 6 and 9 (liu4 and jiu3). They are joined together at a rather early stage of clustering, 
-    it seems that 6 and 9 are more similar to each other than one instance of 3 (san3) and another 3. We can 
+    it seems that 6 and 9 are more similar to each other than one instance of 3 (san1) and another 3. We can 
     give the explanation that 6 and 9 share the same vowel that lasts relatively longer. Besides, although 5 is 
-    not wrongly categorized, the node extraction stage produce very few number of utterance of 5.
+    not wrongly categorized, the node extraction stage produces very few number of utterance of 5 (wu3). This 
+    is probably due to the utterances of 5 have relatively low amplitudes.
 
 \section{Conclusion}
     We implemented the algorithm proposed in [1]. While recognizing it power, we also note several 
     shortcomings of it. First, the parameters are task-specific, which adds cost to migrating the algorithm 
     between datasets. Second, the setting of $L$ limits the possible length of a phonetic unit to 
-    a narrow range. In the current setting, patterns lasting 0.5s and 4s are not likely to be found simultaneously.
+    a narrow range. Under the current framework, patterns lasting 0.5s and 4s are not likely to be found simultaneously.
     (More strictly, this is possible, but needs to rely on subsequent clustering stage.) A more flexible 
     matching algorithm during path-refinement stage may help alleviate the problem.
+
+\begin{thebibliography}{1}
+\bibitem{1}
+Park, Alex S., and James R. Glass. "Unsupervised pattern discovery in speech." IEEE Transactions on Audio, 
+Speech, and Language Processing 16.1 (2008): 186-197.
+\bibitem{2}
+Kanadje, Manish, et al. "Assisted keyword indexing for lecture videos using unsupervised keyword spotting." 
+Pattern Recognition Letters 71 (2016): 8-15.
+\bibitem{3}
+GitHub link to our project: https://github.com/Crispher/Speech-Science
+\end{thebibliography}
 
 \end{document}
 
